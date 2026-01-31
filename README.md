@@ -34,6 +34,17 @@ Add the snippet below under the `volumes:` section of any service that needs SSH
       read_only: true
 ```
 
+## Virtual Hosts & DNS
+- Frontend resolves via `project-atlas.test` (served from the compiled Vite build with a fallback to the dev server). Add `127.0.0.1 project-atlas.test` to `/etc/hosts`.
+- Backend (Laravel + Swagger) resolves via `api.project-atlas.test` on the same public port (default `NGINX_PORT=8080`). Add `127.0.0.1 api.project-atlas.test` as well.
+- The frontend host redirects any `/api*` hits to `api.project-atlas.test` so you never accidentally mix the two.
+
+## Automation Scripts
+- `bash ./scripts local` – end-to-end bootstrap for local machines. It creates `docker/.env` (if missing), scaffolds the Laravel backend in `backend/` from inside the PHP container without nesting, copies `.env`, generates the app key, fixes `storage` permissions, and finally runs `docker compose up -d --build`.
+- `bash ./scripts server` – deploy helper for remote hosts. It optionally builds frontend assets, pulls the latest images, recreates the stack, runs artisan cache optimizations, and executes migrations. Toggle pieces with env flags (`SKIP_FRONTEND_BUILD=true`, `SKIP_BACKEND_CACHE=true`, `SKIP_MIGRATIONS=true`).
+
+Both commands rely on the docker compose file under `./docker/`, so run them from the repo root (or prefix with `bash`).
+
 ## Services
 - `php` – PHP 8.3 FPM with Composer, Git, and UID/GID matching the host for safe volume mounts. Git identity is injected from the `.env` values so commits inside the container use your name.
 - `frontend` – Node 20 + pnpm/npm ready image that installs dependencies and runs `npm run dev` once a valid Vue project exists. Until `package.json` appears it simply waits, allowing you to scaffold the app without noisy restarts.
@@ -60,5 +71,11 @@ Add the snippet below under the `volumes:` section of any service that needs SSH
 - Host repo is bind-mounted into `/workspace`, so containers always work with your current checkout (including the `.git` folder).
 - `HOST_UID` / `HOST_GID` inside `docker/.env` should match your local user to avoid permission issues when the containers write files.
 - Git author data is set at runtime from `GIT_USER_NAME` / `GIT_USER_EMAIL`. If you also need SSH-based workflows, re-use the optional bind snippet or forward `SSH_AUTH_SOCK` before running compose.
+
+## Swagger on the Backend Host
+1. Require a documentation package (e.g., `composer require darkaonline/l5-swagger` inside the PHP container).
+2. Publish its config/UI assets: `php artisan vendor:publish --provider "L5Swagger\L5SwaggerServiceProvider"`.
+3. Expose the docs route (defaults to `/api/documentation`); it will be visible on `http://api.project-atlas.test:${NGINX_PORT:-8080}/swagger` because the backend virtual host already whitelists `/swagger*` paths.
+4. Keep the docs behind auth if needed (e.g., middleware or basic auth) since they are now directly reachable via the dedicated host.
 
 With the Docker environment running you can iterate on the PHP backend inside `backend/` and your Vue app inside `frontend/` while sharing the same Git history from either the host or containers.

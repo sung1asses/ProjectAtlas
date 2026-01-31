@@ -9,7 +9,9 @@ ENV HOME=/home/dev
 
 # Install shell essentials plus Git/SSH for dependency installs over SSH.
 RUN apk add --no-cache git openssh bash \
-    && addgroup -g ${APP_GID} devgroup 2>/dev/null || addgroup devgroup \
+    && (deluser node 2>/dev/null || true) \
+    && (delgroup node 2>/dev/null || true) \
+    && (addgroup -g ${APP_GID} devgroup 2>/dev/null || addgroup devgroup) \
     && adduser -G devgroup -u ${APP_UID} -D dev \
     && mkdir -p /home/dev \
     && chown -R dev:devgroup /home/dev
