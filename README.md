@@ -42,6 +42,9 @@ Add the snippet below under the `volumes:` section of any service that needs SSH
 ## Automation Scripts
 - `bash ./scripts local` – end-to-end bootstrap for local machines. It creates `docker/.env` (if missing), scaffolds the Laravel backend in `backend/` from inside the PHP container without nesting, copies `.env`, generates the app key, fixes `storage` permissions, and finally runs `docker compose up -d --build`.
 - `bash ./scripts server` – deploy helper for remote hosts. It optionally builds frontend assets, pulls the latest images, recreates the stack, runs artisan cache optimizations, and executes migrations. Toggle pieces with env flags (`SKIP_FRONTEND_BUILD=true`, `SKIP_BACKEND_CACHE=true`, `SKIP_MIGRATIONS=true`).
+- `bash ./scripts down [--volumes]` – wrap around `docker compose down` to stop the stack (accepts any extra flags).
+- `bash ./scripts logs [frontend|backend|nginx]` – tail logs for the whole compose project or a specific service.
+- `bash ./scripts shell <backend|frontend>` – drop into an interactive `sh` session inside the PHP or Node container.
 
 Both commands rely on the docker compose file under `./docker/`, so run them from the repo root (or prefix with `bash`).
 
@@ -59,7 +62,7 @@ Both commands rely on the docker compose file under `./docker/`, so run them fro
 ## Mounts & Shared State
 - Project code: `${PROJECT_ROOT}` → `/workspace` (one bind mount shared by every service).
 - Composer cache: named volume `composer_cache` → `/home/dev/.composer` so repeated `composer install` commands stay fast.
-- Node dependencies: named volume `frontend_node_modules` → `/workspace/frontend/node_modules` to keep `node_modules` stable across container rebuilds.
+- Node dependencies: live inside the repo (`frontend/node_modules`) so they share the same UID/GID as your host user. This avoids Docker volume permission issues and keeps hot reload predictable.
 - Optional SSH keys: bind `/home/you/.ssh` → `/home/dev/.ssh` (read only) if you added the snippet shown above.
 
 ## Networking & Env Passthrough

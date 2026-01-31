@@ -25,6 +25,11 @@ if [ ! -d "${FRONTEND_DIR_PATH}" ]; then
   mkdir -p "${FRONTEND_DIR_PATH}"
 fi
 
+# Ensure node_modules (if it already exists from the host) belongs to the dev user to avoid npm EACCES errors.
+if [ -d node_modules ]; then
+  chown -R dev:devgroup node_modules 2>/dev/null || true
+fi
+
 cd "${FRONTEND_DIR_PATH}"
 
 # Wait patiently on a blank repo so you can scaffold the Vue app without the container restarting repeatedly.
@@ -33,8 +38,8 @@ if [ ! -f package.json ]; then
   exec tail -f /dev/null
 fi
 
-# Install dependencies only when node_modules is missing to keep restarts fast.
-if [ ! -d node_modules ]; then
+# Install dependencies if node_modules is missing or empty (first run of the named volume).
+if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then
   echo "Installing frontend dependencies..."
   npm install
 fi
