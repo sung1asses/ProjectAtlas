@@ -1,0 +1,111 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "projects": "Projects"
+  },
+  "lang": {
+    "en": "EN",
+    "ru": "RU"
+  },
+  "footer": {
+    "tagline": "Atlas Studio — Building launch-ready systems."
+  },
+  "landing": {
+    "eyebrow": "Project Atlas",
+    "title": "Craft your portfolio in one stack",
+    "body": "Vue powers the interactive portfolio while Laravel handles content, auth, and integrations. Both live inside the same Docker environment so deployments stay predictable.",
+    "links": {
+      "backend": "Backend API",
+      "swagger": "Swagger Docs",
+      "github": "GitHub Repo"
+    }
+  },
+  "home": {
+    "eyebrow": "Product Design Studio",
+    "title": "Atlas crafts immersive experiences for ambitious teams.",
+    "body": "We pair research-driven strategy with bold visual systems. Explore our latest collaborations and see how we can partner to build your next launch.",
+    "cta": "Explore Projects",
+    "cards": [
+      {
+        "tag": "Capability",
+        "title": "Strategy Sprints",
+        "copy": "One-week engagements aligning stakeholders, defining KPIs, and mapping roadmaps."
+      },
+      {
+        "tag": "Collaboration",
+        "title": "Embedded Pods",
+        "copy": "Cross-functional squads integrating with your team to ship faster."
+      },
+      {
+        "tag": "Delivery",
+        "title": "Venture Launch",
+        "copy": "Brand, product, and go-to-market systems delivered in 90 days."
+      }
+    ]
+  },
+  "about": {
+    "eyebrow": "About Atlas",
+    "title": "Independent studio led by technologists and strategists.",
+    "body": "We believe thoughtful systems unlock better products. Our team blends service design, engineering, and visual storytelling.",
+    "approachTitle": "Approach",
+    "approachBody": "Discovery workshops, rapid prototyping, and continuous validation keep teams aligned. We document decisions and surface them in our shared OS.",
+    "principlesTitle": "Principles",
+    "principles": [
+      "Lead with research, not assumptions.",
+      "Ship weekly to stay accountable.",
+      "Build tooling so teams scale sustainably."
+    ]
+  },
+  "projects": {
+    "eyebrow": "Case Studies",
+    "title": "Selected launches from B2B tools to consumer platforms.",
+    "body": "Browse how we scope, build, and measure success across different industries.",
+    "error": "Unable to load projects right now.",
+    "retry": "Try again",
+    "cta": "Read case study"
+  },
+  "projectDetail": {
+    "eyebrow": "Project",
+    "title": "{name} case study",
+    "body": "Explore how the Atlas backend exposes `/api/projects/:slug` while the SPA hydrates data on mount. The current response is mocked but follows the same contract as the upcoming API.",
+    "error": "Unable to load this case study.",
+    "notFound": "Case study not found.",
+    "retry": "Try again",
+    "back": "← Back to projects"
+  },
+  "mockProjects": {
+    "supplyChainAi": {
+      "name": "Northwind Logistics",
+      "industry": "Supply Chain",
+      "summary": "Data platform redesign with predictive recommendations and fleet visibility.",
+      "body": "We re-platformed the ops console, adding AI-driven alerts and real-time telemetry."
+    },
+    "creatorPassport": {
+      "name": "Beacon Studio",
+      "industry": "Creator Economy",
+      "summary": "Subscription platform with onboarding flows, identity, and billing automation.",
+      "body": "Multi-tenant architecture supported regional tax rules and multi-currency checkout."
+    },
+    "finopsSuite": {
+      "name": "Halo Finance",
+      "industry": "FinTech",
+      "summary": "FinOps dashboard consolidating spend, alerts, and compliance workflows.",
+      "body": "Automated reconciliation pipelines cut manual reporting by 80% and surfaced insights."
+    }
+  },
+  "tiles": [
+    {
+      "title": "Unified Tooling",
+      "copy": "Dockerized PHP + Node stack with matching UID/GID so local and server behave the same."
+    },
+    {
+      "title": "Vue 3 + Vite",
+      "copy": "Hot-module reload during development and lean production builds served by nginx."
+    },
+    {
+      "title": "Documented API",
+      "copy": "Swagger-ready Laravel backend exposed on api.project-atlas.test with dedicated host."
+    }
+  ]
+}

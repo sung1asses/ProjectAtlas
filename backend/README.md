@@ -1,59 +1,45 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## ProjectAtlas Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This Laravel 12 service powers the SPA with real project data pulled from GitHub. The backend is responsible for:
 
-## About Laravel
+- Persisting curated project entries (slug, repo, marketing blurb, etc.).
+- Syncing supplemental metadata from GitHub (README, dominant languages, last commit date).
+- Exposing an HTTP API documented with Swagger so the Vue app can read stable JSON.
+- Providing a Filament-powered admin surface to create or edit showcased projects without touching code.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Planned architecture
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Layer | Responsibility |
+| --- | --- |
+| Database | `projects` table stores slug, display name, repository owner/name, visibility flags, and cached GitHub payloads (README HTML, languages JSON, last commit timestamp). |
+| Services | `GithubRepositoryService` wraps the REST API (`/readme`, `/languages`, `/commits`) through Laravel's HTTP client, handles auth token injection, and caches responses per repo/locale. |
+| API | `ProjectController@index/show` returns summary/detail payloads consumed by the SPA. Routes live in `routes/api.php`, and each action is annotated for Swagger. |
+| Admin | Filament panel at `/admin` surfaces CRUD for `Project` records plus quick actions to sync README/language data from GitHub. |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Environment variables
 
-## Learning Laravel
+```
+GITHUB_TOKEN=ghp_xxx                 # PAT or GitHub App installation token
+GITHUB_CACHE_TTL=300                 # seconds for API response cache
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Local development
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. `composer install` (or `composer update` after adding packages).
+2. Copy `.env.example` → `.env`, fill the GitHub variables, and run `php artisan key:generate`.
+3. `php artisan migrate` (will create the `projects` table once migration is added).
+4. `php artisan serve` and `npm run dev` (or rely on Sail/Docker).
 
-## Laravel Sponsors
+### API & documentation
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- Swagger UI is served from `/api/documentation` (powered by `l5-swagger`).
+- Regenerate the OpenAPI schema after code changes with `php artisan l5-swagger:generate`.
+- Schema source files live under `app/Http/Controllers` (see `ProjectController` annotations) and `app/Http/Resources`.
 
-### Premium Partners
+### Admin panel
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- Filament lives at `/admin` and uses the default web guard. Create an account with `php artisan make:filament-user` (or seed a user) to log in.
+- The `Project` resource exposes forms/table actions mirroring the previous Blade UI, including a "Sync GitHub" action that clears caches and refreshes metadata.
+- Customize navigation, colors, and widgets via `App\Providers\Filament\AdminPanelProvider`.
 
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This document will evolve as soon as the above pieces land in code.

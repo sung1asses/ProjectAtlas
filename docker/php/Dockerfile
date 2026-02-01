@@ -10,9 +10,9 @@ ENV COMPOSER_ALLOW_SUPERUSER=1 \
     HOME=/home/dev
 
 # Install OS tools needed for Composer, Git, SSH, and PHP intl/opcache extensions.
-RUN apk add --no-cache bash git curl openssh-client icu-data-full icu-libs icu-dev tzdata zip unzip \
+RUN apk add --no-cache bash git curl openssh-client icu-data-full icu-libs icu-dev tzdata zip unzip libzip-dev \
     && docker-php-ext-configure intl \
-    && docker-php-ext-install pdo pdo_mysql intl opcache \
+    && docker-php-ext-install pdo pdo_mysql intl opcache zip \
     && rm -rf /var/cache/apk/*
 
 # Provide Composer globally for dependency management.
