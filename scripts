@@ -1,0 +1,239 @@
+#!/usr/bin/env bash
+# Unified helper that bootstraps the local docker stack or prepares a deployable build.
+
+if [ -z "${BASH_VERSION:-}" ]; then
+	echo "This script must be run with bash. Use: bash ./scripts <command>" >&2
+	exit 1
+fi
+
+set -euo pipefail
+
+ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+cd "${ROOT_DIR}"
+
+ENV_FILE="${ROOT_DIR}/docker/.env"
+COMPOSE_FILE="${ROOT_DIR}/docker/docker-compose.yml"
+COMPOSE_CMD=(docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}")
+
+BACKEND_DIR_VALUE=backend
+FRONTEND_DIR_VALUE=frontend
+
+ensure_env_file() {
+	if [ -f "${ENV_FILE}" ]; then
+		return
+	fi
+	echo "Generating docker/.env from example..."
+	bash "${ROOT_DIR}/docker/bin/bootstrap.sh"
+}
+
+load_stack_env() {
+	if [ ! -f "${ENV_FILE}" ]; then
+		BACKEND_DIR_VALUE=backend
+		FRONTEND_DIR_VALUE=frontend
+		return
+	fi
+	# shellcheck disable=SC1090
+	. "${ENV_FILE}"
+	BACKEND_DIR_VALUE=${BACKEND_DIR:-backend}
+	FRONTEND_DIR_VALUE=${FRONTEND_DIR:-frontend}
+}
+
+create_backend() {
+	if [ -f "${ROOT_DIR}/${BACKEND_DIR_VALUE}/artisan" ]; then
+		echo "Laravel backend already exists, skipping scaffold."
+		return
+	fi
+	echo "Scaffolding Laravel into ${BACKEND_DIR_VALUE}/ ..."
+	"${COMPOSE_CMD[@]}" run --rm php sh -c "cd /workspace && composer create-project laravel/laravel ${BACKEND_DIR_VALUE} --prefer-dist --no-interaction"
+}
+
+ensure_backend_env() {
+	if [ -f "${ROOT_DIR}/${BACKEND_DIR_VALUE}/.env" ]; then
+		return
+	fi
+	echo "Copying backend/.env"
+	cp "${ROOT_DIR}/${BACKEND_DIR_VALUE}/.env.example" "${ROOT_DIR}/${BACKEND_DIR_VALUE}/.env"
+}
+
+generate_app_key() {
+	if [ ! -f "${ROOT_DIR}/${BACKEND_DIR_VALUE}/artisan" ]; then
+		echo "Backend not found, skipping key generation."
+		return
+	fi
+	echo "Generating Laravel app key..."
+	"${COMPOSE_CMD[@]}" run --rm php sh -c "cd /workspace/${BACKEND_DIR_VALUE} && php artisan key:generate --force"
+}
+
+fix_backend_permissions() {
+	if [ ! -d "${ROOT_DIR}/${BACKEND_DIR_VALUE}/storage" ]; then
+		return
+	fi
+	echo "Fixing storage/bootstrap permissions..."
+	"${COMPOSE_CMD[@]}" run --rm php sh -c "cd /workspace/${BACKEND_DIR_VALUE} && chmod -R 775 storage bootstrap/cache"
+}
+
+start_stack() {
+	echo "Starting docker services..."
+	"${COMPOSE_CMD[@]}" up -d --build
+}
+
+build_frontend_assets() {
+	if [ "${SKIP_FRONTEND_BUILD:-false}" = "true" ]; then
+		echo "SKIP_FRONTEND_BUILD enabled, skipping asset build."
+		return
+	fi
+	if [ ! -d "${ROOT_DIR}/${FRONTEND_DIR_VALUE}" ] || [ ! -f "${ROOT_DIR}/${FRONTEND_DIR_VALUE}/package.json" ]; then
+		echo "No frontend project detected; skipping asset build."
+		return
+	fi
+	echo "Building frontend assets..."
+	"${COMPOSE_CMD[@]}" run --rm frontend sh -c "cd /workspace/${FRONTEND_DIR_VALUE} && npm install && npm run build"
+}
+
+optimize_backend() {
+	if [ "${SKIP_BACKEND_CACHE:-false}" = "true" ]; then
+		echo "SKIP_BACKEND_CACHE enabled, skipping artisan cache commands."
+		return
+	fi
+	echo "Caching Laravel config/routes/views..."
+	"${COMPOSE_CMD[@]}" run --rm php sh -c "cd /workspace/${BACKEND_DIR_VALUE} && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+}
+
+run_migrations() {
+	if [ "${SKIP_MIGRATIONS:-false}" = "true" ]; then
+		echo "SKIP_MIGRATIONS enabled, skipping database migrations."
+		return
+	fi
+	echo "Running database migrations..."
+	"${COMPOSE_CMD[@]}" run --rm php sh -c "cd /workspace/${BACKEND_DIR_VALUE} && php artisan migrate --force"
+}
+
+pull_images() {
+	echo "Pulling latest container images..."
+	"${COMPOSE_CMD[@]}" pull
+}
+
+stop_stack() {
+	echo "Stopping docker services..."
+	"${COMPOSE_CMD[@]}" down "$@"
+}
+
+tail_logs() {
+	local target=${1:-}
+	local service=""
+	case "${target}" in
+		backend)
+			service=php
+			shift || true
+			;;
+		frontend|php|nginx)
+			service="${target}"
+			shift || true
+			;;
+		""|-*)
+			service=""
+			;;
+		*)
+			# Treat unknown label as option for docker logs
+			service=""
+			;;
+	esac
+	if [ -n "${service}" ]; then
+		"${COMPOSE_CMD[@]}" logs -f "${service}" "$@"
+	else
+		"${COMPOSE_CMD[@]}" logs -f "$@"
+	fi
+}
+
+shell_into() {
+	local target=${1:-}
+	if [ -z "${target}" ]; then
+		echo "Usage: bash ./scripts shell <backend|frontend>" >&2
+		exit 1
+	fi
+	local service=""
+	case "${target}" in
+		backend)
+			service=php
+			;;
+		frontend)
+			service=frontend
+			;;
+		*)
+			echo "Unknown shell target '${target}'. Use backend or frontend." >&2
+			exit 1
+			;;
+	esac
+	shift || true
+	"${COMPOSE_CMD[@]}" exec -it "${service}" sh "$@"
+}
+
+bootstrap_local() {
+	ensure_env_file
+	load_stack_env
+	create_backend
+	ensure_backend_env
+	generate_app_key
+	fix_backend_permissions
+	start_stack
+}
+
+bootstrap_server() {
+	ensure_env_file
+	load_stack_env
+	build_frontend_assets
+	pull_images
+	"${COMPOSE_CMD[@]}" up -d --build
+	optimize_backend
+	run_migrations
+}
+
+print_usage() {
+	cat <<'EOF'
+Usage: bash ./scripts <command>
+
+Commands:
+	local   Scaffold/refresh the local docker stack (backend install, env setup, key, permissions, docker up).
+	server  Build frontend assets, pull images, bring the stack up, cache config, and run migrations for deploys.
+	down [args]   Run docker compose down with optional extra flags.
+	logs [svc]   Follow logs for the whole stack or a single service.
+	shell <svc>  Open an interactive shell inside the backend or frontend container.
+
+Environment flags:
+	SKIP_FRONTEND_BUILD=true   Skip npm install/build inside the frontend container (server mode).
+	SKIP_BACKEND_CACHE=true    Skip artisan cache commands (server mode).
+	SKIP_MIGRATIONS=true       Skip artisan migrate --force (server mode).
+EOF
+}
+
+COMMAND=${1:-}
+case "${COMMAND}" in
+	local)
+		bootstrap_local
+		;;
+	server)
+		bootstrap_server
+		;;
+	down)
+		ensure_env_file
+		load_stack_env
+		shift || true
+		stop_stack "$@"
+		;;
+	logs)
+		ensure_env_file
+		load_stack_env
+		shift || true
+		tail_logs "$@"
+		;;
+	shell)
+		ensure_env_file
+		load_stack_env
+		shift || true
+		shell_into "$@"
+		;;
+	*)
+		print_usage
+		exit 1
+		;;
+esac
