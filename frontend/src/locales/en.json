@@ -9,103 +9,104 @@
     "ru": "RU"
   },
   "footer": {
-    "tagline": "Atlas Studio — Building launch-ready systems."
+    "tagline": "© Roman Suvorov — full-stack engineer ready for new opportunities."
   },
   "landing": {
-    "eyebrow": "Project Atlas",
-    "title": "Craft your portfolio in one stack",
-    "body": "Vue powers the interactive portfolio while Laravel handles content, auth, and integrations. Both live inside the same Docker environment so deployments stay predictable.",
+    "eyebrow": "Roman Suvorov",
+    "title": "Full-stack engineer building calm, reliable products",
+    "body": "I'm a 25-year-old with six years in IT, helping founders launch Laravel APIs, Filament admin tools, and Vue 3 frontends without drama.",
     "links": {
-      "backend": "Backend API",
-      "swagger": "Swagger Docs",
-      "github": "GitHub Repo"
+      "backend": "Live API",
+      "swagger": "API Docs",
+      "github": "Source on GitHub"
     }
   },
   "home": {
-    "eyebrow": "Product Design Studio",
-    "title": "Atlas crafts immersive experiences for ambitious teams.",
-    "body": "We pair research-driven strategy with bold visual systems. Explore our latest collaborations and see how we can partner to build your next launch.",
-    "cta": "Explore Projects",
+    "eyebrow": "Selected work",
+    "title": "I bring clarity, ship code, and leave teams faster than before.",
+    "body": "From fintech dashboards to creator platforms, I scope the roadmap, design the stack, and carry releases across the finish line.",
+    "cta": "Browse case studies",
     "cards": [
       {
-        "tag": "Capability",
-        "title": "Strategy Sprints",
-        "copy": "One-week engagements aligning stakeholders, defining KPIs, and mapping roadmaps."
+        "tag": "Framing",
+        "title": "Clarity first",
+        "copy": "Stakeholder interviews, metrics, and constraints turn vague goals into a backlog we can execute."
       },
       {
-        "tag": "Collaboration",
-        "title": "Embedded Pods",
-        "copy": "Cross-functional squads integrating with your team to ship faster."
+        "tag": "Engineering",
+        "title": "Laravel + Vue focus",
+        "copy": "REST APIs, Filament/Livewire back offices, and Vue 3 frontends with strong typing, tests, and monitoring."
       },
       {
         "tag": "Delivery",
-        "title": "Venture Launch",
-        "copy": "Brand, product, and go-to-market systems delivered in 90 days."
+        "title": "Operational hand-off",
+        "copy": "CI/CD, docs, and knowledge transfer so the product keeps evolving after I leave."
       }
     ]
   },
   "about": {
-    "eyebrow": "About Atlas",
-    "title": "Independent studio led by technologists and strategists.",
-    "body": "We believe thoughtful systems unlock better products. Our team blends service design, engineering, and visual storytelling.",
-    "approachTitle": "Approach",
-    "approachBody": "Discovery workshops, rapid prototyping, and continuous validation keep teams aligned. We document decisions and surface them in our shared OS.",
+    "eyebrow": "About Roman",
+    "title": "Hi, I'm Roman Suvorov — 25 y/o full-stack engineer.",
+    "body": "I wrote my first production PHP at 19 and spent the last six years shipping internal tools, marketing sites, and data products for small teams.",
+    "approachTitle": "How I work",
+    "approachBody": "Blend discovery sprints with short shipping cycles, keep stakeholders in the loop, and document every technical decision along the way.",
     "principlesTitle": "Principles",
     "principles": [
-      "Lead with research, not assumptions.",
-      "Ship weekly to stay accountable.",
-      "Build tooling so teams scale sustainably."
+      "Ship something observable every week.",
+      "Design systems, APIs, and tooling as shared assets.",
+      "Automate deploys and tests to stay focused on product value."
     ]
   },
   "projects": {
     "eyebrow": "Case Studies",
-    "title": "Selected launches from B2B tools to consumer platforms.",
-    "body": "Browse how we scope, build, and measure success across different industries.",
-    "error": "Unable to load projects right now.",
+    "title": "Real engagements I've owned end-to-end.",
+    "body": "Each project started as an open brief—I led research, architecture, delivery, and knowledge transfer.",
+    "error": "Couldn't load projects.",
     "retry": "Try again",
     "cta": "Read case study"
   },
   "projectDetail": {
     "eyebrow": "Project",
     "title": "{name} case study",
-    "body": "Explore how the Atlas backend exposes `/api/projects/:slug` while the SPA hydrates data on mount. The current response is mocked but follows the same contract as the upcoming API.",
+    "body": "Each case study now uses my curated gallery and long-form description straight from the Laravel backend. Toggle the locale to see how the copy adapts.",
     "error": "Unable to load this case study.",
     "notFound": "Case study not found.",
     "retry": "Try again",
-    "back": "← Back to projects"
+    "back": "← Back to projects",
+    "viewRepository": "Open repository"
   },
   "mockProjects": {
     "supplyChainAi": {
       "name": "Northwind Logistics",
-      "industry": "Supply Chain",
-      "summary": "Data platform redesign with predictive recommendations and fleet visibility.",
-      "body": "We re-platformed the ops console, adding AI-driven alerts and real-time telemetry."
+      "industry": "Ops & supply chain",
+      "summary": "I owned the Laravel backend and Filament tooling for dispatch, telemetry, and AI-driven alerts.",
+      "body": "Ported legacy spreadsheets to a typed API, built Livewire consoles for operations, and tuned queues/notifications in AWS."
     },
     "creatorPassport": {
       "name": "Beacon Studio",
-      "industry": "Creator Economy",
-      "summary": "Subscription platform with onboarding flows, identity, and billing automation.",
-      "body": "Multi-tenant architecture supported regional tax rules and multi-currency checkout."
+      "industry": "Creator economy",
+      "summary": "Subscription infrastructure with onboarding, identity, and billing automation.",
+      "body": "Delivered multi-tenant billing, regional tax handling, and a Vue 3 experience that onboards creators in minutes."
     },
     "finopsSuite": {
       "name": "Halo Finance",
       "industry": "FinTech",
       "summary": "FinOps dashboard consolidating spend, alerts, and compliance workflows.",
-      "body": "Automated reconciliation pipelines cut manual reporting by 80% and surfaced insights."
+      "body": "Designed reporting pipelines, alerts, and compliance workflows so finance teams get answers without spreadsheets."
     }
   },
   "tiles": [
     {
-      "title": "Unified Tooling",
-      "copy": "Dockerized PHP + Node stack with matching UID/GID so local and server behave the same."
+      "title": "Product-minded engineering",
+      "copy": "I translate business constraints into architecture, ensuring every line of code ladders up to a metric."
     },
     {
-      "title": "Vue 3 + Vite",
-      "copy": "Hot-module reload during development and lean production builds served by nginx."
+      "title": "End-to-end ownership",
+      "copy": "Design data models, REST contracts, admin tools, and frontends, then wire up CI/CD and observability."
     },
     {
-      "title": "Documented API",
-      "copy": "Swagger-ready Laravel backend exposed on api.project-atlas.test with dedicated host."
+      "title": "Transparent collaboration",
+      "copy": "Daily async updates, Loom walkthroughs, and tidy docs keep teams unblocked even across time zones."
     }
   ]
 }

@@ -13,9 +13,30 @@ const errorKey = ref('');
 const slug = computed(() => String(route.params.slug ?? 'project'));
 const formattedSlug = computed(() => slug.value.replace(/-/g, ' '));
 const displayName = computed(() => project.value?.name ?? formattedSlug.value);
+const repositoryLink = computed(() => {
+  const repo = project.value?.repository;
+  if (!repo) {
+    return null;
+  }
+
+  if (repo.startsWith('http')) {
+    return repo;
+  }
+
+  return `https://github.com/${repo}`;
+});
 
 const { t, locale } = useI18n();
 const errorMessage = computed(() => (errorKey.value ? t(errorKey.value) : ''));
+const galleryItems = computed(() => {
+  const images = project.value?.gallery ?? [];
+  return images
+    .filter(image => image && image.url)
+    .map((image, index) => ({
+      url: image.url,
+      alt: image.alt || `${displayName.value} screenshot ${index + 1}`
+    }));
+});
 
 const loadProject = async () => {
   try {
@@ -77,10 +98,38 @@ watch(locale, () => {
       </div>
 
       <article v-else class="space-y-4">
-        <p class="text-sm uppercase tracking-[0.3em] text-stone-400">{{ project?.industry }}</p>
+        <p class="text-sm uppercase tracking-[0.3em] text-stone-400">{{ project?.industry ?? '—' }}</p>
         <p class="text-lg text-slate-600">{{ project?.summary }}</p>
-        <p class="leading-relaxed text-slate-700">{{ project?.body }}</p>
+        <figure v-if="project?.previewImage" class="overflow-hidden rounded-3xl border border-stone-100">
+          <img :src="project.previewImage" :alt="project?.name ?? formattedSlug" class="w-full object-cover" loading="lazy" />
+        </figure>
+        <div
+          v-if="project?.descriptionHtml"
+          class="rich-text"
+          v-html="project.descriptionHtml"
+        />
+        <p v-else class="leading-relaxed text-slate-700">{{ project?.descriptionText ?? project?.summary }}</p>
+        <a
+          v-if="repositoryLink"
+          :href="repositoryLink"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900"
+        >
+          {{ t('projectDetail.viewRepository') }}
+          <span aria-hidden="true">→</span>
+        </a>
       </article>
+    </section>
+
+    <section v-if="galleryItems.length" class="grid gap-4 md:grid-cols-2">
+      <figure
+        v-for="image in galleryItems"
+        :key="image.url"
+        class="overflow-hidden rounded-3xl border border-stone-100 bg-slate-50"
+      >
+        <img :src="image.url" :alt="image.alt" class="h-full w-full object-cover" loading="lazy" />
+      </figure>
     </section>
   </div>
 </template>

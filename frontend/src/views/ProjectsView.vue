@@ -39,7 +39,7 @@
         :key="project.slug"
         class="flex flex-col space-y-3 rounded-[28px] border border-stone-200 bg-white p-6 text-slate-800 shadow-glow"
       >
-        <p class="mb-2 text-xs uppercase tracking-[0.35em] text-stone-400">{{ project.industry }}</p>
+        <p class="mb-2 text-xs uppercase tracking-[0.35em] text-stone-400">{{ project.industry || '—' }}</p>
         <h3 class="text-2xl font-semibold text-slate-900">{{ project.name }}</h3>
         <p class="text-slate-600 flex-1">{{ project.summary }}</p>
         <router-link

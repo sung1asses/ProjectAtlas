@@ -74,6 +74,8 @@ const getLocaleValue = () => {
   return localeRef ?? 'en';
 };
 
+const buildLocaleParams = () => ({ lang: getLocaleValue() });
+
 let mockCache = {
   locale: null,
   list: [],
@@ -105,22 +107,117 @@ const findLocalizedMock = slug => {
   return mockCache.map.get(slug) ?? null;
 };
 
-const shouldUseMock = import.meta.env.VITE_USE_API_MOCK !== 'false';
+const extractTags = value => (Array.isArray(value) ? value.filter(Boolean) : []);
+const extractLanguageNames = value => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'object') {
+    return Object.keys(value);
+  }
+  return [];
+};
+
+const normalizeGallery = value => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map(item => {
+      if (!item) return null;
+      if (typeof item === 'string') {
+        return { url: item, alt: '' };
+      }
+      if (typeof item === 'object' && item.url) {
+        return { url: item.url, alt: item.alt ?? '' };
+      }
+      return null;
+    })
+    .filter(Boolean);
+};
+
+const inferIndustryLabel = (tags = [], languages = []) => {
+  if (tags.length) return tags.join(' • ');
+  if (languages.length) return languages.join(' • ');
+  return '—';
+};
+
+const mapProjectFromApi = project => {
+  if (!project) return null;
+  const tags = extractTags(project.tags);
+  const languages = extractLanguageNames(project.languages);
+
+  return {
+    slug: project.slug,
+    name: project.title ?? project.slug,
+    summary: project.summary ?? '',
+    industry: inferIndustryLabel(tags, languages),
+    tags,
+    languages,
+    repository: project.repository ?? '',
+    github: project.github ?? {},
+    syncedAt: project.syncedAt ?? null,
+    previewImage: project.previewImage ?? '',
+    gallery: normalizeGallery(project.gallery)
+  };
+};
+
+const mapProjectDetailFromApi = project => {
+  const base = mapProjectFromApi(project);
+  if (!base) return null;
+
+  const descriptionHtml = project.descriptionHtml ?? '';
+  const descriptionText = project.descriptionText ?? base.summary;
+  return {
+    ...base,
+    descriptionHtml,
+    descriptionText,
+    gallery: base.gallery.length ? base.gallery : normalizeGallery(project.gallery),
+    previewImage: base.previewImage || project.previewImage || '',
+  };
+};
+
+const mapMockSummary = project => ({
+  slug: project.slug,
+  name: project.name,
+  summary: project.summary,
+  industry: project.industry,
+  tags: [],
+  languages: [],
+  repository: '',
+  github: {},
+  syncedAt: null,
+  previewImage: '',
+  gallery: []
+});
+
+const mapMockDetail = project => ({
+  ...mapMockSummary(project),
+  descriptionHtml: '',
+  descriptionText: project.body ?? project.summary ?? ''
+});
+
+const mapMockList = () => getLocalizedMocks().map(mapMockSummary);
+
+const shouldUseMock = import.meta.env.VITE_USE_API_MOCK === 'true';
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function fetchProjects() {
   if (shouldUseMock) {
-    await delay(350);
-    return getLocalizedMocks();
+    await delay(150);
+    return mapMockList();
   }
 
   try {
-    const { data } = await httpClient.get('/projects');
-    return data?.data ?? data;
+    const { data } = await httpClient.get('/projects', { params: buildLocaleParams() });
+    const payload = data?.data ?? data ?? [];
+    return (Array.isArray(payload) ? payload : [])
+      .map(mapProjectFromApi)
+      .filter(Boolean);
   } catch (error) {
     console.warn('Falling back to mock projects data', error);
     await delay(200);
-    return getLocalizedMocks();
+    return mapMockList();
   }
 }
 
@@ -128,16 +225,19 @@ export async function fetchProjectDetail(slug) {
   if (!slug) return null;
 
   if (shouldUseMock) {
-    await delay(250);
-    return findLocalizedMock(slug);
+    await delay(120);
+    const mock = findLocalizedMock(slug);
+    return mock ? mapMockDetail(mock) : null;
   }
 
   try {
-    const { data } = await httpClient.get(`/projects/${slug}`);
-    return data?.data ?? data;
+    const { data } = await httpClient.get(`/projects/${slug}`, { params: buildLocaleParams() });
+    const payload = data?.data ?? data;
+    return mapProjectDetailFromApi(payload);
   } catch (error) {
     console.warn(`Falling back to mock detail for ${slug}`, error);
     await delay(200);
-    return findLocalizedMock(slug);
+    const mock = findLocalizedMock(slug);
+    return mock ? mapMockDetail(mock) : null;
   }
 }

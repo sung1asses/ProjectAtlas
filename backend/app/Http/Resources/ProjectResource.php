@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 use OpenApi\Annotations as OA;
 
 /** @mixin \App\Models\Project */
@@ -77,10 +78,54 @@ class ProjectResource extends JsonResource
             'translations' => [
                 'title' => $this->title_translations ?? [],
                 'summary' => $this->summary_translations ?? [],
+                'description' => $this->description_translations ?? [],
             ],
             'locale' => $locale,
             'availableLocales' => Project::AVAILABLE_LOCALES,
             'defaultLocale' => Project::DEFAULT_LOCALE,
         ];
+    }
+
+    protected function resolvePreviewImageUrl(): ?string
+    {
+        $path = $this->preview_image_path;
+
+        if (! $path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
+    }
+
+    /**
+     * @return array<int, array<string, ?string>>
+     */
+    protected function formatGalleryImages(): array
+    {
+        $images = collect($this->gallery_images ?? [])
+            ->filter(fn ($path) => filled($path))
+            ->values();
+
+        return $images
+            ->map(function ($path) {
+                return [
+                    'url' => $this->resolveMediaUrl($path),
+                    'alt' => null,
+                ];
+            })
+            ->all();
+    }
+
+    protected function resolveMediaUrl(string $path): string
+    {
+        if (str_starts_with($path, 'http')) {
+            return $path;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 }

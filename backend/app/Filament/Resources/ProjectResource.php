@@ -273,6 +273,10 @@ class ProjectResource extends Resource
                         Forms\Components\Textarea::make("summary_translations.$locale")
                             ->label('Краткое описание')
                             ->rows(4),
+                        Forms\Components\RichEditor::make("description_translations.$locale")
+                            ->label('Полное описание')
+                            ->disableToolbarButtons(['attachFiles'])
+                            ->columnSpanFull(),
                     ]);
             })
             ->values()
